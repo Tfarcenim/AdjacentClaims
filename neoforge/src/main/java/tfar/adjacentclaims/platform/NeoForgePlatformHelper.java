@@ -1,6 +1,6 @@
-package com.example.examplemod.platform;
+package tfar.adjacentclaims.platform;
 
-import com.example.examplemod.platform.services.IPlatformHelper;
+import tfar.adjacentclaims.platform.services.IPlatformHelper;
 import net.neoforged.fml.ModList;
 import net.neoforged.fml.loading.FMLLoader;
 

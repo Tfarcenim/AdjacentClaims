@@ -54,6 +54,18 @@ dependencies {
         implementation "me.shedaniel.cloth:cloth-config-neoforge:$cloth_config_version"
         implementation "dev.architectury:architectury-neoforge:$architectury_version"
     }
+
+    implementation("dev.ftb.mods:ftb-library-neoforge:${ftb_library_version}") { transitive false }
+    implementation("dev.ftb.mods:ftb-essentials-neoforge:2101.1.1-SNAPSHOT") {transitive false}
+    implementation("dev.ftb.mods:ftb-ranks-neoforge:2101.1.2-SNAPSHOT") {transitive false}
+
+    implementation ("dev.ftb.mods:ftb-chunks-neoforge:2101.1.7-SNAPSHOT"){transitive false}
+
+    implementation ("dev.ftb.mods:ftb-teams-neoforge:2101.1.2-SNAPSHOT"){transitive false}
+
+
+    compileOnly "fuzs.forgeconfigapiport:forgeconfigapiport-common-neoforgeapi:$neoforge_config_api_version"
+
 }
 
 sourceSets.main.resources { srcDir 'src/generated/resources' }

@@ -16,6 +16,14 @@ dependencies {
     // fabric and neoforge both bundle mixinextras, so it is safe to use it in common
     compileOnly group: 'io.github.llamalad7', name: 'mixinextras-common', version: '0.3.5'
     annotationProcessor group: 'io.github.llamalad7', name: 'mixinextras-common', version: '0.3.5'
+
+    compileOnly "dev.ftb.mods:ftb-library-neoforge:2101.1.4-SNAPSHOT"
+    compileOnly("dev.ftb.mods:ftb-essentials-neoforge:2101.1.1-SNAPSHOT") {transitive false}
+    compileOnly("dev.ftb.mods:ftb-ranks-neoforge:2101.1.2-SNAPSHOT") {transitive false}
+    compileOnly ("dev.ftb.mods:ftb-chunks-neoforge:2101.1.7-SNAPSHOT"){transitive false}
+
+    compileOnly ("dev.ftb.mods:ftb-teams-neoforge:2101.1.2-SNAPSHOT"){transitive false}
+
 }
 
 configurations {
