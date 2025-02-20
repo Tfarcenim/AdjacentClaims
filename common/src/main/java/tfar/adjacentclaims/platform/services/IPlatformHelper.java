@@ -1,5 +1,7 @@
 package tfar.adjacentclaims.platform.services;
 
+import java.util.UUID;
+
 public interface IPlatformHelper {
 
     /**
@@ -33,4 +35,7 @@ public interface IPlatformHelper {
 
         return isDevelopmentEnvironment() ? "development" : "production";
     }
+
+    String getUsername(UUID uuid);
+
 }

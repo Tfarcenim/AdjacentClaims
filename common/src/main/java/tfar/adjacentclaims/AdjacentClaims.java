@@ -1,20 +1,28 @@
 package tfar.adjacentclaims;
 
 import dev.architectury.event.CompoundEventResult;
-import dev.ftb.mods.ftbchunks.api.ClaimResult;
-import dev.ftb.mods.ftbchunks.api.ClaimedChunk;
-import dev.ftb.mods.ftbchunks.api.ClaimedChunkManager;
-import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
+import dev.ftb.mods.ftbchunks.api.*;
 import dev.ftb.mods.ftbchunks.api.event.ClaimedChunkEvent;
 import dev.ftb.mods.ftblibrary.math.ChunkDimPos;
+import dev.ftb.mods.ftbteams.api.FTBTeamsAPI;
+import dev.ftb.mods.ftbteams.api.Team;
+import dicemc.money.MoneyMod;
+import dicemc.money.api.MoneyManager;
 import net.minecraft.core.Direction;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.ChunkPos;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import tfar.adjacentclaims.platform.Services;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.item.Items;
+
+import java.util.Collection;
+import java.util.UUID;
 
 // This class is part of the common project meaning it is shared between all supported loaders. Code written here can only
 // import and access the vanilla codebase, libraries used by vanilla, and optionally third party libraries that provide
@@ -25,6 +33,7 @@ public class AdjacentClaims {
     public static final String MOD_ID = "adjacentclaims";
     public static final String MOD_NAME = "AdjacentClaims";
     public static final Logger LOG = LoggerFactory.getLogger(MOD_NAME);
+    static final Direction[] horizontals = new Direction[]{Direction.NORTH,Direction.SOUTH,Direction.EAST,Direction.WEST};
 
     // The loader specific projects are able to import and use any code from the common project. This allows you to
     // write the majority of your code here and load it from your loader specific projects. This example has some
@@ -37,12 +46,18 @@ public class AdjacentClaims {
         // we have an interface in the common code and use a loader specific implementation to delegate our call to
         // the platform specific approach.
 
-        final Direction[] horizontals = new Direction[]{Direction.NORTH,Direction.SOUTH,Direction.EAST,Direction.WEST};
 
         ClaimedChunkEvent.BEFORE_CLAIM.register((commandSourceStack, claimedChunk) -> {
             if (commandSourceStack.isPlayer()) {
                 ServerPlayer player = commandSourceStack.getPlayer();
                 if (!player.canUseGameMasterBlocks()) {
+
+                    MoneyManager moneyManager = MoneyManager.get();
+                    double balance = moneyManager.getBalance(MoneyMod.AcctTypes.PLAYER.key,player.getUUID());
+                    if (balance < 0) {
+                        return CompoundEventResult.interruptFalse(ClaimResult.customProblem("Insufficient funds"));
+                    }
+
                     FTBChunksAPI.API api = FTBChunksAPI.api();
                     ClaimedChunkManager manager = api.getManager();
                     ChunkDimPos self = claimedChunk.getPos();
@@ -86,5 +101,56 @@ public class AdjacentClaims {
             }
             default -> throw new IllegalStateException("Unexpected value: " + direction);
         }
+    }
+
+    //server.overworld().getDayTime();
+    public static void tick(MinecraftServer server) {
+        long gameTime = server.overworld().getGameTime();
+        if (gameTime % AdjacentClaimsConfig.SERVER.rentInterval.get() == 0) {
+            FTBChunksAPI.API chunksAPI = FTBChunksAPI.api();
+            ClaimedChunkManager manager = chunksAPI.getManager();
+            FTBTeamsAPI.API teamsAPI = FTBTeamsAPI.api();
+            for (Team team : teamsAPI.getManager().getTeams()) {
+                ChunkTeamData chunkTeamData = manager.getOrCreateData(team);
+                Collection<? extends ClaimedChunk> claimedChunks = chunkTeamData.getClaimedChunks();
+                int number = claimedChunks.size();
+                int teamSize = team.getMembers().size();
+                if (teamSize > 0) {
+                    double share = AdjacentClaimsConfig.SERVER.globalRent.getAsDouble() * number / teamSize;
+
+                    MoneyManager moneyManager = MoneyManager.get();
+
+                    for (UUID uuid : team.getMembers()) {
+                        moneyManager.changeBalance(MoneyMod.AcctTypes.PLAYER.key,uuid, -share);//todo properly handle multiple people
+                        double balance = moneyManager.getBalance(MoneyMod.AcctTypes.PLAYER.key, uuid);
+                        if (balance < 0) {
+                            for (ClaimedChunk claimedChunk : claimedChunks) {
+                                claimedChunk.unclaim(server.createCommandSourceStack(),true);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    public static ResourceLocation id(String path) {
+        return ResourceLocation.fromNamespaceAndPath(MOD_ID,path);
+    }
+
+    public static void login(ServerPlayer player) {
+        ReferralCodeData referralCodeData = ReferralCodeData.getOrLoad(player.server.overworld());
+        if (!referralCodeData.hasAnswered(player)) {
+            player.sendSystemMessage(Component.literal("Enter referral code or 'none' if you don't have one"));
+        }
+    }
+
+    public static boolean handleChat(ServerPlayer player, String rawText) {
+        ReferralCodeData referralCodeData = ReferralCodeData.getOrLoad(player.server.overworld());
+        if (!referralCodeData.hasAnswered(player)) {
+            referralCodeData.parseInput(player,rawText);
+            return true;
+        }
+        return false;
     }
 }

@@ -1,8 +1,11 @@
 package tfar.adjacentclaims.platform;
 
+import net.neoforged.neoforge.common.UsernameCache;
 import tfar.adjacentclaims.platform.services.IPlatformHelper;
 import net.neoforged.fml.ModList;
 import net.neoforged.fml.loading.FMLLoader;
+
+import java.util.UUID;
 
 public class NeoForgePlatformHelper implements IPlatformHelper {
 
@@ -22,5 +25,10 @@ public class NeoForgePlatformHelper implements IPlatformHelper {
     public boolean isDevelopmentEnvironment() {
 
         return !FMLLoader.isProduction();
+    }
+
+    @Override
+    public String getUsername(UUID uuid) {
+        return UsernameCache.getLastKnownUsername(uuid);
     }
 }

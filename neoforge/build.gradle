@@ -66,6 +66,8 @@ dependencies {
 
     compileOnly "fuzs.forgeconfigapiport:forgeconfigapiport-common-neoforgeapi:$neoforge_config_api_version"
 
+    implementation "maven.modrinth:money-sign-shops:1.0.1-neoforge"
+
 }
 
 sourceSets.main.resources { srcDir 'src/generated/resources' }

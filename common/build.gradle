@@ -24,6 +24,11 @@ dependencies {
 
     compileOnly ("dev.ftb.mods:ftb-teams-neoforge:2101.1.2-SNAPSHOT"){transitive false}
 
+    compileOnly "fuzs.forgeconfigapiport:forgeconfigapiport-common-neoforgeapi:$neoforge_config_api_version"
+
+    compileOnly "maven.modrinth:money-sign-shops:1.0.1-neoforge"
+
+
 }
 
 configurations {
