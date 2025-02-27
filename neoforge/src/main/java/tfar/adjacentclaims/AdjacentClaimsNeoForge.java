@@ -10,6 +10,7 @@ import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.RegisterCommandsEvent;
 import net.neoforged.neoforge.event.ServerChatEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
+import net.neoforged.neoforge.event.tick.PlayerTickEvent;
 import net.neoforged.neoforge.event.tick.ServerTickEvent;
 
 @Mod(AdjacentClaims.MOD_ID)
@@ -26,6 +27,9 @@ public class AdjacentClaimsNeoForge {
         AdjacentClaims.init();
         NeoForge.EVENT_BUS.addListener(RegisterCommandsEvent.class,event -> ModCommands.register(event.getDispatcher(),event.getBuildContext()));
         NeoForge.EVENT_BUS.addListener(ServerTickEvent.Pre.class,event -> AdjacentClaims.tick(event.getServer()));
+        NeoForge.EVENT_BUS.addListener(PlayerTickEvent.Pre.class, event -> {
+            if (event.getEntity() instanceof ServerPlayer player) AdjacentClaims.playerTick(player);
+        });
         NeoForge.EVENT_BUS.addListener(ServerChatEvent.class,event -> event.setCanceled(AdjacentClaims.handleChat(event.getPlayer(),event.getRawText())));
         NeoForge.EVENT_BUS.addListener(PlayerEvent.PlayerLoggedInEvent.class, event -> AdjacentClaims.login((ServerPlayer) event.getEntity()));
     }

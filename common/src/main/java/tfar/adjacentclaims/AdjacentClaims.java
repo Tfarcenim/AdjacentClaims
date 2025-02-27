@@ -8,10 +8,12 @@ import dev.ftb.mods.ftbteams.api.FTBTeamsAPI;
 import dev.ftb.mods.ftbteams.api.Team;
 import dicemc.money.MoneyMod;
 import dicemc.money.api.MoneyManager;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.ChunkPos;
@@ -21,8 +23,7 @@ import tfar.adjacentclaims.platform.Services;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.item.Items;
 
-import java.util.Collection;
-import java.util.UUID;
+import java.util.*;
 
 // This class is part of the common project meaning it is shared between all supported loaders. Code written here can only
 // import and access the vanilla codebase, libraries used by vanilla, and optionally third party libraries that provide
@@ -46,6 +47,15 @@ public class AdjacentClaims {
         // we have an interface in the common code and use a loader specific implementation to delegate our call to
         // the platform specific approach.
 
+        ClaimedChunkEvent.AFTER_UNCLAIM.register(((commandSourceStack, claimedChunk) -> {
+            ChunkDimPos pos = claimedChunk.getPos();
+            MinecraftServer server = commandSourceStack.getServer();
+            ServerLevel level = server.getLevel(pos.dimension());
+            ClaimsRealEstateData claimsRealEstateData = ClaimsRealEstateData.get(level);
+            if (claimsRealEstateData != null) {
+               claimsRealEstateData.unlistClaim(pos.chunkPos());
+            }
+        }));
 
         ClaimedChunkEvent.BEFORE_CLAIM.register((commandSourceStack, claimedChunk) -> {
             if (commandSourceStack.isPlayer()) {
@@ -101,6 +111,20 @@ public class AdjacentClaims {
             }
             default -> throw new IllegalStateException("Unexpected value: " + direction);
         }
+    }
+
+    static Map<UUID,BlockPos> previousPos = new HashMap<>();
+
+    public static void playerTick(ServerPlayer player) {
+        ChunkDimPos previous = new ChunkDimPos(player.level(),previousPos.getOrDefault(player.getUUID(),BlockPos.ZERO));
+        ChunkDimPos current = new ChunkDimPos(player);
+        if (!Objects.equals(previous,current)) {
+            ClaimsRealEstateData claimsRealEstateData = ClaimsRealEstateData.get(player.serverLevel());
+            if (claimsRealEstateData!= null) {
+                claimsRealEstateData.notifyForSale(player,current.chunkPos());
+            }
+        }
+        previousPos.put(player.getUUID(),player.blockPosition());
     }
 
     //server.overworld().getDayTime();

@@ -1,5 +1,7 @@
 package tfar.adjacentclaims.platform.services;
 
+import net.minecraft.server.MinecraftServer;
+
 import java.util.UUID;
 
 public interface IPlatformHelper {
@@ -37,5 +39,7 @@ public interface IPlatformHelper {
     }
 
     String getUsername(UUID uuid);
+
+    MinecraftServer getStaticServer();
 
 }

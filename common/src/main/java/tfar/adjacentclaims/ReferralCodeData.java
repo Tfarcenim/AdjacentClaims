@@ -74,7 +74,7 @@ public class ReferralCodeData extends SavedData {
     }
 
     private void load(CompoundTag compoundTag, HolderLookup.Provider registries) {
-        referralCodes = CODEC.parse(new Dynamic<>(NbtOps.INSTANCE, compoundTag.get("referral_codes"))).resultOrPartial(AdjacentClaims.LOG::error).orElseThrow();
+        referralCodes = new HashMap<>(CODEC.parse(new Dynamic<>(NbtOps.INSTANCE, compoundTag.get("referral_codes"))).resultOrPartial(AdjacentClaims.LOG::error).orElseThrow());
     }
 
     @Override
